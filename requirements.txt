@@ -4,7 +4,6 @@
 # Core SDN and OpenFlow
 mininet==2.3.0
 ryu==4.34
-ovs-lib==1.2.0
 
 # Network and Packet Manipulation
 scapy>=2.4.5

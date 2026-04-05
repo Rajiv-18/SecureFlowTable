@@ -286,7 +286,7 @@ class DefenseController(app_manager.RyuApp):
             datapath=datapath,
             buffer_id=msg.buffer_id,
             in_port=in_port,
-            actions=actions
+            actions=actions, data=msg.data
         )
         datapath.send_msg(out)
 

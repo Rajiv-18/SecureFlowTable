@@ -59,8 +59,8 @@ def create_network():
     info('*** Creating links\n')
     # Connect hosts to switch
     # Adding bandwidth and delay settings allows us to simulate realistic conditions
-    net.addLink(h1, s1, bw=100)  # 100 Mbps bandwidth
-    net.addLink(h2, s1, bw=100)
+    net.addLink(h1, s1)
+    net.addLink(h2, s1)
 
     return net
 
