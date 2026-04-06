@@ -49,7 +49,6 @@
    ```bash
    cd ~/SecureFlowTable && sudo python3 monitoring/monitoring.py --output-dir ./results/attack_no_defense --duration 100
    ```
-   > **Note:** Duration is 100 because the VM takes ~96 seconds to run the attack.
 
 5. **Terminal 2 (Quickly!):** Launch the attack:
    ```
